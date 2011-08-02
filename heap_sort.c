@@ -25,7 +25,7 @@ swap(char* a, char* b, size_t size)
 
     static void
 make_heap(
-        sort_t* s,
+        const sort_t* s,
         int index0)
 {
     int index1 = index0 * 2 + 1;
@@ -39,21 +39,17 @@ make_heap(
 
         make_heap(s, index1);
         make_heap(s, index2);
+
         if ((*s->compare)(item1, item2) > 0)
         {
-            if ((*s->compare)(item0, item2) > 0)
-            {
-                swap(item0, item2, s->size);
-                make_heap(s, index2);
-            }
+            index1 = index2;
+            item1 = item2;
         }
-        else
+
+        if ((*s->compare)(item0, item1) > 0)
         {
-            if ((*s->compare)(item0, item1) > 0)
-            {
-                swap(item0, item1, s->size);
-                make_heap(s, index1);
-            }
+            swap(item0, item1, s->size);
+            make_heap(s, index1);
         }
     }
     else if (index1 < s->count)
