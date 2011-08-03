@@ -1,70 +1,15 @@
-#include <stdint.h>
-#include <stdio.h>
+#include <stddef.h>
+#include "swap.h"
 
-typedef (*cmpfunc_t)(const void*, const void*);
+#define SWAP(a, b, c)           swap(a, b, c)
+#define COMPARE(s, a, b)        (*(s)->compare)(a, b)
 
 typedef struct sort_t {
     char* head;
     size_t size;
     size_t count;
-    cmpfunc_t compare;
+    int (*compare)(const void*, const void*);
 } sort_t;
-
-static int count_compare = 0;
-static int count_swap = 0;
-
-    static void
-swap(char* a, char* b, size_t size)
-{
-    char* e;
-    for (e = a + size; a < e; ++a, ++b)
-    {
-        char tmp = *b;
-        *b = *a;
-        *a = tmp;
-    }
-    ++count_swap;
-}
-
-    static void
-make_heap(
-        const sort_t* s,
-        int index0)
-{
-    int index1 = index0 * 2 + 1;
-    int index2 = index1 + 1;
-
-    if (index2 < s->count)
-    {
-        char* item0 = s->head + index0 * s->size;
-        char* item1 = s->head + index1 * s->size;
-        char* item2 = item1 + s->size;
-
-        make_heap(s, index1);
-        make_heap(s, index2);
-
-        if ((*s->compare)(item1, item2) > 0)
-        {
-            index1 = index2;
-            item1 = item2;
-        }
-
-        if ((*s->compare)(item0, item1) > 0)
-        {
-            swap(item0, item1, s->size);
-            make_heap(s, index1);
-        }
-    }
-    else if (index1 < s->count)
-    {
-        char* item0 = s->head + index0 * s->size;
-        char* item1 = s->head + index1 * s->size;
-        if ((*s->compare)(item0, item1) > 0)
-        {
-            swap(item0, item1, s->size);
-        }
-    }
-}
 
     void
 insert_heap(
@@ -84,7 +29,7 @@ insert_heap(
             char* item1 = s->head + index1 * s->size;
             char* item2 = item1 + s->size;
 
-            if ((*s->compare)(item1, item2) > 0)
+            if (COMPARE(s, item1, item2) > 0)
             {
                 int index = index1;
                 char* item = item1;
@@ -94,15 +39,15 @@ insert_heap(
                 item2 = item;
             }
 
-            if ((*s->compare)(item0, item1) > 0)
+            if (COMPARE(s, item0, item1) > 0)
             {
-                swap(item0, item1, s->size);
+                SWAP(item0, item1, s->size);
                 i = index1;
                 continue;
             }
-            else if ((*s->compare)(item0, item2) > 0)
+            else if (COMPARE(s, item0, item2) > 0)
             {
-                swap(item0, item2, s->size);
+                SWAP(item0, item2, s->size);
                 i = index2;
                 continue;
             }
@@ -111,9 +56,9 @@ insert_heap(
         {
             char* item0 = s->head + i * s->size;
             char* item1 = s->head + index1 * s->size;
-            if ((*s->compare)(item0, item1) > 0)
+            if (COMPARE(s, item0, item1) > 0)
             {
-                swap(item0, item1, s->size);
+                SWAP(item0, item1, s->size);
             }
         }
 
@@ -122,34 +67,11 @@ insert_heap(
 }
 
     void
-heap_sort1(
+heap_sort(
         void* base,
         size_t size,
         size_t count,
-        cmpfunc_t compare)
-{
-    sort_t s;
-    char* tail;
-
-    s.head = (char*)base;
-    s.size = size;
-    s.count = count;
-    s.compare = compare;
-
-    for (tail = s.head + size * (count - 1); s.head < tail; tail -= s.size)
-    {
-        make_heap(&s, 0);
-        swap(s.head, tail, s.size);
-        s.count -= 1;
-    }
-}
-
-    void
-heap_sort2(
-        void* base,
-        size_t size,
-        size_t count,
-        cmpfunc_t compare)
+        int (*compare)(const void*, const void*))
 {
     sort_t s;
     char* tail;
@@ -173,38 +95,4 @@ heap_sort2(
         s.count -= 1;
         insert_heap(&s, 0);
     }
-}
-
-
-    static int
-cmp_int_asc(const int* a, const int* b)
-{
-    ++count_compare;
-    return *b - *a;
-}
-
-    static void
-dump_array(const char* label, int* array, int length)
-{
-    int i;
-
-    printf("%s:", label);
-    for (i = 0; i < length; ++i)
-    {
-        printf(" %d", array[i]);
-    }
-    printf("\n");
-}
-
-    int
-main(int argc, char** argv)
-{
-    int array[] = { 10, 4, 8, 5, 12, 2, 6, 11, 3, 9, 7, 1, 13 };
-
-    heap_sort2(array, sizeof(array[0]), 13, (cmpfunc_t)cmp_int_asc);
-
-    dump_array("sorted", array, 13);
-    printf("compare=%d swap=%d\n", count_compare, count_swap);
-
-    return 0;
 }
