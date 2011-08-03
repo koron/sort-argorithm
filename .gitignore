@@ -1,3 +1,5 @@
 *.exe
 *.o
 a.out
+heap_sort
+tags
